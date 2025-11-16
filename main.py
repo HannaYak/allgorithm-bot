@@ -1,31 +1,17 @@
 import asyncio
-from aiogram import Bot, Dispatcher, executor, types
-from config import BOT_TOKEN
-from database import init_db
-from handlers.start import register_start_handlers
-from handlers.cabinet import register_cabinet_handlers
-from handlers.games import register_games_handlers
-from handlers.help import register_help_handlers
-from handlers.admin import register_admin_handlers
-from keyboards import back_to_main_kb
+from aiogram import types
+from config import bot, dp
+from handlers import start, games, admin, payment  # ← твои хендлеры
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+# Регистрация хендлеров
+dp.include_router(start.router)
+dp.include_router(games.router)
+dp.include_router(admin.router)
+dp.include_router(payment.router)
 
-async def on_startup(_):
-    await init_db()
+async def main():
+    print("Bot started!")
+    await dp.start_polling(bot)
 
-def register_all_handlers():
-    register_start_handlers(dp)
-    register_cabinet_handlers(dp)
-    register_games_handlers(dp)
-    register_help_handlers(dp)
-    register_admin_handlers(dp)
-    # Общий back
-    @dp.callback_query_handler(lambda c: c.data == 'back_main')
-    async def back_main(callback: types.CallbackQuery):
-        await callback.message.edit_text("Главное меню:", reply_markup=back_to_main_kb())
-
-if __name__ == '__main__':
-    register_all_handlers()
-    executor.start_polling(dp, on_startup=on_startup, skip_updates=True)
+if __name__ == "__main__":
+    asyncio.run(main())
