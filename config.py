@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import stripe
+from aiogram import Bot, Dispatcher
 
 load_dotenv()
 
@@ -52,3 +53,6 @@ GAME_RULES = {
 (Только 18+)
 """
 }
+
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher(bot)
