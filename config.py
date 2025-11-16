@@ -55,4 +55,4 @@ GAME_RULES = {
 }
 
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher()
