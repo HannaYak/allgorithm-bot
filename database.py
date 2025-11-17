@@ -11,15 +11,17 @@ async def init_db():
         await conn.execute("DROP TABLE IF EXISTS payments")  # если хочешь с нуля
         
         # Создаём только нужные таблицы
-        await conn.executescript("""
             CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                name TEXT,
-                age INTEGER,
-                games_played INTEGER DEFAULT 0,
-                loyalty INTEGER DEFAULT 0,
-                created_at TEXT
-            );
+        user_id INTEGER PRIMARY KEY,
+        name TEXT,
+        birthdate TEXT,        -- новая
+        age INTEGER,
+        fun_fact TEXT,         -- новая
+        crazy_story TEXT,      -- новая
+        games_played INTEGER DEFAULT 0,
+        loyalty INTEGER DEFAULT 0,
+        created_at TEXT
+        );
 
             CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
