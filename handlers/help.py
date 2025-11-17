@@ -1,30 +1,19 @@
+# handlers/help.py — ПРОСТАЯ ПОМОЩЬ
 from aiogram import Router, types, F
 
 router = Router()
 
-@router.callback_query(lambda c: c.data == "help")
-async def show_help(callback: types.CallbackQuery):
-    text = (
-        "Помощь\n\n"
-        "• /start — главное меню\n"
-        "• Игры — выбор и запись на игру\n"
-        "• Личный кабинет — твои данные и лояльность\n"
-        "• Оплата — Blik, карта, P24\n\n"
-        "По всем вопросам: @hanna_yak\n"
-        "Мы в Варшаве — ждём тебя!"
-    )
-
 @router.message(F.text == "Помощь")
-async def help_from_menu(message: types.Message):
-    await message.answer(
+async def help_simple(message: types.Message):
+    text = (
         "Помощь\n\n"
         "• /start — начать заново\n"
         "• /menu — главное меню\n"
-        "• По вопросам: @hanna_yak"
+        "• Игры — выбрать игру\n"
+        "• Личный кабинет — твоя карта лояльности\n"
+        "• Правила — общие правила\n\n"
+        "Нужна помощь лично от меня? Нажми кнопку ниже ↓"
     )
     
-    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(text="Назад", callback_data="back_to_start")]
-    ])
-    
-    await callback.message.edit_text(text, reply_markup=keyboard, disable_web_page_preview=True)
+    kb = [[types.KeyboardButton(text="Задать вопрос организатору")]]
+    await message.answer(text, reply_markup=types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True))
