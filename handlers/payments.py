@@ -65,3 +65,9 @@ async def create_payment(callback: types.CallbackQuery):
 
     except Exception as e:
         await callback.message.edit_text(f"Ошибка оплаты: {str(e)}")
+
+# После того, как оплата прошла:
+async with aiosqlite.connect("bot.db") as db:
+    await db.execute("UPDATE games SET seats_taken = seats_taken + 1 WHERE key = ?", (game_key,))
+    await db.commit()
+
