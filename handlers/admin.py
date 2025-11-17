@@ -78,3 +78,13 @@ async def admin_stats(callback: types.CallbackQuery):
         f"Выручка: {revenue} PLN\n"
         f"Активная игра: {active_name}"
     )
+
+@router.callback_query(F.data == "admin_events")
+async def admin_create_event(callback: types.CallbackQuery):
+    kb = [
+        [types.InlineKeyboardButton("Meet&Eat", callback_data="new_meet_eat")],
+        [types.InlineKeyboardButton("Лок Сток", callback_data="new_lock_stock")],
+        [types.InlineKeyboardButton("Бар Лжецов", callback_data="new_bar_liar")],
+        [types.InlineKeyboardButton("Свидания", callback_data="new_speed_dating")],
+    ]
+    await callback.message.edit_text("Выбери игру для нового события:", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
