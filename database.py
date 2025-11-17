@@ -43,3 +43,22 @@ async def init_db():
         """)
         await conn.commit()
     print("База данных готова — только с events!")
+
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+# ДОБАВЬ ЭТО В КОНЕЦ ФАЙЛА database.py
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+async def add_user(user_id: int, name: str = None, age: int = None):
+    async with aiosqlite.connect(DB_NAME) as conn:
+        await conn.execute("""
+            INSERT OR REPLACE INTO users (user_id, name, age, created_at) 
+            VALUES (?, ?, ?, ?)
+        """, (user_id, name, age, datetime.datetime.now().isoformat()))
+        await conn.commit()
+
+async def get_user(user_id: int):
+    async with aiosqlite.connect(DB_NAME) as conn:
+        conn.row_factory = aiosqlite.Row
+        async with conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cur:
+            row = await cur.fetchone()
+            return dict(row) if row else None
