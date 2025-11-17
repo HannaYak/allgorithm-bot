@@ -56,3 +56,30 @@ async def show_game(callback: types.CallbackQuery):
 @router.callback_query(F.data == "back_games")
 async def back(callback: types.CallbackQuery):
     await show_games(callback.message)
+
+@router.message(F.text == "Игры")
+async def show_events(message: types.Message):
+    from datetime import datetime, timedelta
+    two_weeks = (datetime.now() + timedelta(days=14)).strftime("%Y-%m-%d %H:%M")
+    
+    async with aiosqlite.connect("bot.db") as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute("""
+            SELECT * FROM events 
+            WHERE datetime <= ? AND seats_taken < seats_total
+            ORDER BY datetime
+        """, (two_weeks,)) as cur:
+            events = await cur.fetchall()
+
+    if not events:
+        return await message.answer("На ближайшие 2 недели мест нет 😔\nНо скоро добавлю новые!")
+
+    kb = []
+    for e in events:
+        places = e["seats_total"] - e["seats_taken"]
+        kb.append([types.InlineKeyboardButton(
+            text=f"{e['name']} — {e['price']} zł ({places} мест)",
+            callback_data=f"event:{e['id']}"
+        )])
+
+    await message.answer("Ближайшие игры (2 недели):", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
