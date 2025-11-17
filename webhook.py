@@ -1,35 +1,27 @@
-from flask import Flask, request, abort
-from config import dp, bot, STRIPE_WEBHOOK_SECRET
-import stripe
-import asyncio
+async def handle_success_payment(session):
+    user_id = int(session['client_reference_id'])
+    payment_id = session['metadata']['payment_id']
+    game_key = session['metadata']['game']
 
-app = Flask(__name__)
+    # Обновляем статус
+    await db.update_payment_status(payment_id, "completed")
 
-@app.route('/webhook', methods=['POST'])
-def stripe_webhook():
-    payload = request.data
-    sig_header = request.headers.get('Stripe-Signature')
+    # Добавляем игру в профиль
+    await db.increment_games_played(user_id)
 
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, STRIPE_WEBHOOK_SECRET
-        )
-    except ValueError:
-        return abort(400)
-    except stripe.error.SignatureVerificationError:
-        return abort(400)
+    # Сообщение
+    game_name = {
+        "meet_eat": "Meet&Eat",
+        "lock_stock": "Лок Сток",
+        "bar_liar": "Бар Лжецов",
+        "speed_dating": "Быстрые Свидания"
+    }[game_key]
 
-    if event['type'] == 'checkout.session.completed':
-        session = event['data']['object']
-        user_id = session['client_reference_id']
-        asyncio.create_task(handle_success_payment(user_id))
-
-    return '', 200
-
-async def handle_success_payment(user_id):
-    await bot.send_message(user_id, "Оплата прошла! Вы записаны на игру!")
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    print(f"Webhook server running on port {port}")
-    app.run(host='0.0.0.0', port=port)
+    await bot.send_message(
+        user_id,
+        f"Оплата прошла!\n\n"
+        f"Ты записан на: *{game_name}*\n"
+        f"Дата: {datetime.datetime.now().strftime('%d.%m %H:%M')}\n\n"
+        f"Спасибо! Ждём тебя в Варшаве",
+        parse_mode="Markdown"
+    )
