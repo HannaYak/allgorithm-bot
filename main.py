@@ -5,12 +5,12 @@ from database import init_db
 # Подключаем ВСЕ роутеры
 from handlers import start, games, profile, help, payments, admin
 
-dp.include_router(start.router)
-dp.include_router(games.router)
-dp.include_router(profile.router)
-dp.include_router(help.router)
-dp.include_router(payments.router)
-dp.include_router(admin.router)   # это будет твой новый мощный admin.py
+dp.include_router(start)
+dp.include_router(games)
+dp.include_router(profile)
+dp.include_router(help)
+dp.include_router(payments)
+dp.include_router(admin) # это будет твой новый мощный admin.py
 
 async def on_startup():
     await init_db()
