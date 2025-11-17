@@ -1,21 +1,24 @@
 import asyncio
-from aiogram import types
 from config import bot, dp
-from handlers import start, games, admin, payments
+from database import init_db
 
-# === РЕГИСТРАЦИЯ ХЕНДЛЕРОВ ===
+# Подключаем ВСЕ роутеры
+from handlers import start, games, profile, help, payments, admin
+
 dp.include_router(start.router)
 dp.include_router(games.router)
-dp.include_router(admin.router)
+dp.include_router(profile.router)
+dp.include_router(help.router)
 dp.include_router(payments.router)
+dp.include_router(admin.router)   # это будет твой новый мощный admin.py
 
 async def on_startup():
     await init_db()
-    print("Database initialized")
-
+    print("База данных инициализирована")
 
 async def main():
-    print("Bot started! Polling mode.")
+    print("Бот запущен в режиме polling")
+    await on_startup()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
