@@ -1,51 +1,52 @@
+# handlers/games.py
 from aiogram import Router, types, F
-from aiogram.fsm.context import FSMContext   # ← НОВЫЙ ИМПОРТ
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.fsm.state import StatesGroup, State
 from database import db
-import datetime
 
 router = Router()
 
-class OrderGame(StatesGroup):
-    choosing_game = State()
-    confirming = State()
-
 GAMES = {
-    "meet_eat": {"name": "Meet&Eat", "price": 50, "emoji": "Ресторан"},
-    "lock_stock": {"name": "Лок Сток", "price": 60, "emoji": "Замок"},
-    "bar_liar": {"name": "Бар Лжецов", "price": 55, "emoji": "Кож"},
-    "speed_dating": {"name": "Быстрые Свидания", "price": 70, "emoji": "Сердце"}
+    "meet_eat": "Meet&Eat — 50 PLN",
+    "lock_stock": "Лок Сток — 60 PLN",
+    "bar_liar": "Бар Лжецов — 55 PLN",
+    "speed_dating": "Быстрые Свидания — 70 PLN"
 }
 
-@router.callback_query(lambda c: c.data == "show_games")
-async def show_games(callback: types.CallbackQuery, state: FSMContext):
-    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(
-            text=f"{g['emoji']} {g['name']} — {g['price']} PLN",
-            callback_data=f"select_game:{key}"
-        )] for key, g in GAMES.items()
-    ] + [[types.InlineKeyboardButton(text="Назад", callback_data="back_to_start")]])
+@router.callback_query(F.data == "show_games")
+async def show_games(callback: types.CallbackQuery):
+    async with aiosqlite.connect("bot.db") as conn:
+        conn.row_factory = aiosqlite.Row
+        async with conn.execute("SELECT key, name, price, rules FROM games") as cur:
+            rows = await cur.fetchall()
     
-    await callback.message.edit_text("Выбери игру:", reply_markup=keyboard)
-    await state.set_state(OrderGame.choosing_game)
+    keyboard = []
+    for row in rows:
+        key = row["key"]
+        keyboard.append([
+            types.InlineKeyboardButton(text=f"{row['name']} — {row['price']} PLN", callback_data=f"game_rules:{key}"),
+        ])
+    keyboard.append([types.InlineKeyboardButton(text="Назад", callback_data="back_to_start")])
+    
+    await callback.message.edit_text(
+        "Выбери игру и посмотри правила:",
+        reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard)
+    )
 
-@router.callback_query(lambda c: c.data.startswith("select_game:"))
-async def select_game(callback: types.CallbackQuery, state: FSMContext):
-    game_key = callback.data.split(":")[1]
-    game = GAMES[game_key]
-    
-    await state.update_data(game=game_key, price=game["price"])
+@router.callback_query(lambda c: c.data.startswith("game_rules:"))
+async def show_game_rules(callback: types.CallbackQuery):
+    key = callback.data.split(":")[1]
+    async with aiosqlite.connect("bot.db") as conn:
+        conn.row_factory = aiosqlite.Row
+        async with conn.execute("SELECT name, price, rules FROM games WHERE key=?", (key,)) as cur:
+            game = await cur.fetchone()
     
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(text="Оплатить", callback_data=f"pay:{game_key}")],
-        [types.InlineKeyboardButton(text="Назад", callback_data="show_games")]
+        [types.InlineKeyboardButton(text="Оплатить", callback_data=f"pay:{key}")],
+        [types.InlineKeyboardButton(text="Другие игры", callback_data="show_games")],
+        [types.InlineKeyboardButton(text="Назад в меню", callback_data="back_to_start")]
     ])
     
     await callback.message.edit_text(
-        f"Игра: *{game['name']}*\n"
-        f"Цена: {game['price']} PLN\n\n"
-        "Готов оплатить?",
+        f"*{game['name']}*\n\n{game['rules']}\n\nЦена: {game['price']} PLN",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
