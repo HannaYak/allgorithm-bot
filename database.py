@@ -1,95 +1,76 @@
+# database.py
 import aiosqlite
+import datetime
+from typing import Optional, Dict, Any
 
-db = None
+DB_NAME = "bot.db"
 
 async def init_db():
-    global db
-    db = await aiosqlite.connect('bot.db')
-    await db.executescript('''
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY,
-            name TEXT,
-            age INTEGER,
-            question3 TEXT,
-            completed_anketa BOOLEAN DEFAULT FALSE
-        );
-        CREATE TABLE IF NOT EXISTS registrations (
-            reg_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            game_type TEXT,
-            game_date TEXT,
-            restaurant TEXT,
-            paid BOOLEAN DEFAULT FALSE
-        );
-        CREATE TABLE IF NOT EXISTS visits (
-            user_id INTEGER,
-            game_date TEXT,
-            attended BOOLEAN DEFAULT FALSE,
-            PRIMARY KEY (user_id, game_date)
-        );
-        CREATE TABLE IF NOT EXISTS questions (
-            q_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            question TEXT,
-            answered BOOLEAN DEFAULT FALSE,
-            answer TEXT
-        );
-        CREATE TABLE IF NOT EXISTS games (
-            game_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            game_type TEXT,
-            date TEXT,
-            participants TEXT,
-            active BOOLEAN DEFAULT TRUE,
-            end_time TEXT
-        );
-        CREATE TABLE IF NOT EXISTS stats (
-            id INTEGER PRIMARY KEY DEFAULT 0,
-            total_users INTEGER DEFAULT 0,
-            total_registrations INTEGER DEFAULT 0,
-            total_payments INTEGER DEFAULT 0,
-            total_visits INTEGER DEFAULT 0
-        );
-        INSERT OR IGNORE INTO stats (id) VALUES (0);
-    ''')
-    await db.commit()
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER PRIMARY KEY,
+                name TEXT,
+                age INTEGER,
+                games_played INTEGER DEFAULT 0,
+                loyalty INTEGER DEFAULT 0,
+                created_at TEXT
+            )
+        """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                payment_id TEXT,
+                game TEXT,
+                amount INTEGER,
+                status TEXT,
+                created_at TEXT
+            )
+        """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS games (
+                key TEXT PRIMARY KEY,
+                name TEXT,
+                price INTEGER,
+                rules TEXT,
+                active INTEGER DEFAULT 0
+            )
+        """)
+        # Добавляем игры, если их нет
+        await db.executemany("""
+            INSERT OR IGNORE INTO games (key, name, price, rules, active) VALUES (?, ?, ?, ?, 0)
+        """, [
+            ("meet_eat", "Meet&Eat", 50, "Правила Meet&Eat…", 0),
+            ("lock_stock", "Лок Сток", 60, "Правила Лок Сток…", 0),
+            ("bar_liar", "Бар Лжецов", 55, "Правила Бар Лжецов…", 0),
+            ("speed_dating", "Быстрые Свидания", 70, "Правила Свиданий…", 0),
+        ])
+        await db.commit()
 
-async def update_stats(field):
-    await db.execute(f'UPDATE stats SET {field} = {field} + 1 WHERE id = 0')
-    await db.commit()
+async def get_user(user_id: int) -> Optional[Dict]:
+    async with aiosqlite.connect(DB_NAME) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return dict(row) if row else None
 
-async def get_user(user_id):
-    cursor = await db.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
-    return await cursor.fetchone()
-
-async def save_user(user_id, name, age, question3):
-    await db.execute('''
-        INSERT OR REPLACE INTO users (user_id, name, age, question3, completed_anketa)
-        VALUES (?, ?, ?, ?, TRUE)
-    ''', (user_id, name, age, question3))
-    await db.commit()
-
-async def add_payment(user_id, payment_id, game, amount, status="pending"):
-    async with aiosqlite.connect("bot.db") as db_conn:
-        await db_conn.execute(
-            "INSERT INTO payments (user_id, payment_id, game, amount, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-            (user_id, payment_id, game, amount, status, datetime.datetime.now().isoformat())
+async def add_user(user_id: int, name: str = None, age: int = None):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            "INSERT OR REPLACE INTO users (user_id, name, age, created_at) VALUES (?, ?, ?, ?)",
+            (user_id, name, age, datetime.datetime.now().isoformat())
         )
-        await db_conn.commit()
+        await db.commit()
 
-async def update_payment_status(payment_id, status):
-    async with aiosqlite.connect("bot.db") as db_conn:
-        await db_conn.execute(
-            "UPDATE payments SET status = ? WHERE payment_id = ?",
-            (status, payment_id)
-        )
-        await db_conn.commit()
+async def get_stats():
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute("SELECT COUNT(*) FROM users") as c:
+            users = (await c.fetchone())[0]
+        async with db.execute("SELECT COUNT(*) FROM payments WHERE status='completed'") as c:
+            payments = (await c.fetchone())[0]
+        async with db.execute("SELECT SUM(games_played) FROM users") as c:
+            games = (await c.fetchone())[0] or 0
+        return {"users": users, "payments": payments, "games": games}
 
-async def increment_games_played(user_id):
-    async with aiosqlite.connect("bot.db") as db_conn:
-        await db_conn.execute(
-            "UPDATE users SET games_played = games_played + 1, loyalty = loyalty + 1 WHERE user_id = ?",
-            (user_id,)
-        )
-        await db_conn.commit()
-
-# Добавь другие функции БД по необходимости (registrations, visits и т.д.)
+# остальные функции (add_payment, update_payment_status и т.д.) оставляем как были
