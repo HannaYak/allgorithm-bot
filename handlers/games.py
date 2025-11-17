@@ -10,6 +10,12 @@ GAMES = {
     "speed_dating": "Быстрые Свидания — 70 PLN"
 }
 
+@router.message(F.text == "Игры")
+async def games_from_menu(message: types.Message):
+    # Здесь твой код показа списка игр (как был раньше)
+    # Например:
+    await message.answer("Выбери игру:", reply_markup=await games_keyboard())
+
 @router.callback_query(F.data == "show_games")
 async def show_games(callback: types.CallbackQuery):
     async with aiosqlite.connect("bot.db") as conn:
