@@ -46,9 +46,6 @@ async def init_db():
         await conn.commit()
     print("База данных готова — только с events!")
 
-# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-# ДОБАВЬ ЭТО В КОНЕЦ ФАЙЛА database.py
-# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
 async def add_user(user_id: int, name: str = None, age: int = None):
     async with aiosqlite.connect(DB_NAME) as conn:
