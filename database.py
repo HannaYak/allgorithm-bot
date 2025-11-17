@@ -54,7 +54,6 @@ async def add_user(user_id: int, name: str = None, birthdate: str = None, age: i
         """, (user_id, name, birthdate, age, fun_fact, crazy_story, datetime.now().isoformat()))
         await conn.commit()
 
-
 async def get_user(user_id: int):
     async with aiosqlite.connect(DB_NAME) as conn:
         conn.row_factory = aiosqlite.Row
