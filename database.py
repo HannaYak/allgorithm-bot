@@ -72,4 +72,27 @@ async def get_stats() -> Dict:
             games = (await c.fetchone())[0]
         return {"users": users, "payments": payments, "revenue": revenue, "games": games}
 
+# В init_db() — замени создание таблицы games на это:
+await conn.executescript("""
+    CREATE TABLE IF NOT EXISTS games (
+        key TEXT PRIMARY KEY,
+        name TEXT,
+        price INTEGER,
+        rules TEXT,
+        seats_total INTEGER DEFAULT 20,    -- общее количество мест
+        seats_taken INTEGER DEFAULT 0      -- сколько уже занято
+    );
+""")
+
+# И обнови старые игры (один раз выполнится):
+await conn.executemany("""
+    INSERT OR REPLACE INTO games (key, name, price, rules, seats_total, seats_taken) 
+    VALUES (?, ?, ?, ?, ?, 0)
+""", [
+    ("meet_eat", "Meet&Eat", 50, "Правила Meet&Eat…", 20),
+    ("lock_stock", "Лок Сток", 60, "Правила Лок Сток…", 16),
+    ("bar_liar", "Бар Лжецов", 55, "Правила Бар Лжецов…", 24),
+    ("speed_dating", "Быстрые Свидания", 70, "Правила Свиданий…", 18),
+])
+
 # Добавь сюда остальные функции (add_payment, update_payment_status и т.д.) — если их нет, скажи, я пришлю
