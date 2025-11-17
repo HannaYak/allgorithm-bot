@@ -1,53 +1,43 @@
-from aiogram import types, Dispatcher
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
-from database import get_user, add_user, get_stats, init_db
-from keyboards import personal_menu, back_to_main_kb
-from config import PAYMENT_AMOUNT_PLN
-from aiogram.types import InputFile
-import os
+# handlers/profile.py — ФИНАЛЬНАЯ ВЕРСИЯ
+from aiogram import Router, types, F
+from database import get_user, add_user
 
-async def cabinet_handler(message: types.Message):
-    await message.answer("Личный кабинет:", reply_markup=personal_menu())
+router = Router()  # ← ЭТО САМОЕ ГЛАВНОЕ! ДОЛЖЕН БЫТЬ router!!!
 
-async def my_anketa_handler(message: types.Message):
-    user = await get_user(message.from_user.id)
-    if user:
-        text = f"Имя: {user[1]}\nВозраст: {user[2]}\nВопрос 3: {user[3]}"
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton('Изменить анкету', callback_data='edit_anketa'))
-        keyboard.add(InlineKeyboardButton('Вернуться', callback_data='back_cabinet'))
-        await message.answer(text, reply_markup=keyboard)
-    else:
-        await message.answer("Анкета не найдена.")
+@router.callback_query(F.data == "profile")
+async def show_profile(callback: types.CallbackQuery):
+    user = await get_user(callback.from_user.id)
+    
+    if not user:
+        # Если пользователя нет в БД — создаём
+        await add_user(callback.from_user.id)
+        user = {"name": "не указано", "age": None, "games_played": 0, "loyalty": 0}
 
-async def my_visits_handler(message: types.Message):
-    user_id = message.from_user.id
-    cursor = await db.execute('SELECT game_date FROM visits WHERE user_id = ? AND attended = TRUE', (user_id,))
-    past = [row[0] for row in await cursor.fetchall()]
-    cursor = await db.execute('SELECT game_date FROM registrations WHERE user_id = ? AND paid = TRUE AND game_date > DATE("now")', (user_id,))
-    future = [row[0] for row in await cursor.fetchall()]
-    text = f"Прошедшие посещения: {', '.join(past) if past else 'Нет'}\nБудущие: {', '.join(future) if future else 'Нет'}"
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Запланировать новое', callback_data='to_games'))
-    keyboard.add(InlineKeyboardButton('Вернуться', callback_data='back_cabinet'))
-    await message.answer(text, reply_markup=keyboard)
+    text = (
+        f"Личный кабинет\n\n"
+        f"Имя: {user.get('name', 'не указано')}\n"
+        f"Возраст: {user.get('age', 'не указано')}\n"
+        f"Игр сыграно: {user.get('games_played', 0)}\n"
+        f"Лояльность: {user.get('loyalty', 0)}/5 ⭐\n\n"
+        f"При 5 играх — следующая со скидкой 20%!"
+    )
+    
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="Обновить имя", callback_data="edit_name")],
+        [types.InlineKeyboardButton(text="Обновить возраст", callback_data="edit_age")],
+        [types.InlineKeyboardButton(text="Назад в меню", callback_data="back_to_start")]
+    ])
+    
+    await callback.message.edit_text(text, reply_markup=keyboard)
 
-async def loyalty_card_handler(message: types.Message):
-    user_id = message.from_user.id
-    cursor = await db.execute('SELECT COUNT(*) FROM visits WHERE user_id = ? AND attended = TRUE', (user_id,))
-    count = (await cursor.fetchone())[0]
-    path = f'images/card_{min(count, 12)}.png'
-    caption = f"Посещений: {count}. Подарки на 6 и 12!"
-    if os.path.exists(path):
-        await message.answer_photo(InputFile(path), caption=caption)
-    else:
-        await message.answer(caption)
-    await message.answer(" ", reply_markup=back_to_main_kb())
+# Простые редакторы (можно потом расширить через FSM)
+@router.callback_query(F.data == "edit_name")
+async def edit_name(callback: types.CallbackQuery):
+    await callback.message.edit_text("Пришли своё имя:")
+    # Здесь можно добавить FSM, но пока просто скажем, что будет дальше
+    await callback.answer("Функция в разработке — скоро будет!")
 
-def register_cabinet_handlers(dp: Dispatcher):
-    dp.register_message_handler(cabinet_handler, text='Личный кабинет')
-    dp.register_message_handler(my_anketa_handler, text='Моя анкета')
-    dp.register_message_handler(my_visits_handler, text='Мои посещения')
-    dp.register_message_handler(loyalty_card_handler, text='Карта лояльности')
-    # Добавь callback для 'edit_anketa', 'to_games', 'back_cabinet'
+@router.callback_query(F.data == "edit_age")
+async def edit_age(callback: types.CallbackQuery):
+    await callback.message.edit_text("Пришли свой возраст:")
+    await callback.answer("Функция в разработке — скоро будет!")
