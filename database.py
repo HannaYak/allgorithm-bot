@@ -4,37 +4,21 @@ import datetime
 
 DB_NAME = "bot.db"
 
-# ←←← ВСЁ ВНУТРИ ФУНКЦИИ! ←←←
 async def init_db():
     async with aiosqlite.connect(DB_NAME) as conn:
         await conn.executescript("""
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                name TEXT,
-                age INTEGER,
-                games_played INTEGER DEFAULT 0,
-                loyalty INTEGER DEFAULT 0,
-                created_at TEXT
-            );
-            
-            CREATE TABLE IF NOT EXISTS payments (
+            CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                game_key TEXT,
-                amount INTEGER,
-                status TEXT DEFAULT 'pending',
-                created_at TEXT
-            );
-            
-            CREATE TABLE IF NOT EXISTS games (
-                key TEXT PRIMARY KEY,
-                name TEXT,
+                game_type TEXT,        -- meet_eat, lock_stock и т.д.
+                name TEXT,             -- "Meet&Eat — 22 ноября, 19:30"
+                datetime TEXT,         -- "2025-11-22 19:30"
+                address TEXT,          -- "Ресторан Bella Italia, ul. Nowy Świat 12"
                 price INTEGER,
-                rules TEXT,
                 seats_total INTEGER DEFAULT 20,
                 seats_taken INTEGER DEFAULT 0
             );
         """)
+        await conn.commit()
         
         # Добавляем игры, если их ещё нет
         await conn.executemany("""
