@@ -1,13 +1,14 @@
 import asyncio
 from aiogram import types
 from config import bot, dp
-from handlers import start, games, admin, payment
+from handlers import start, games, admin, payments
 
 # === РЕГИСТРАЦИЯ ХЕНДЛЕРОВ ===
 dp.include_router(start.router)
 dp.include_router(games.router)
 dp.include_router(admin.router)
-dp.include_router(payment.router)
+dp.include_router(payments.router)
+
 
 async def main():
     print("Bot started! Polling mode.")
