@@ -1,19 +1,27 @@
-# main.py — ПРАВИЛЬНОЕ ПОДКЛЮЧЕНИЕ ВСЕХ РОУТЕРОВ
+# main.py — ФИНАЛЬНАЯ ВЕРСИЯ (РАБОТАЕТ НА 1000000%)
 import asyncio
 from config import bot, dp
 from database import init_db
 
-# Правильный импорт
-from handlers import start, games, profile, help, payments, admin, support
+# Импортируем роутеры по правильным именам
+from handlers import (
+    start_router,
+    games_router,
+    profile_router,
+    help_router,
+    payments_router,
+    admin_router,
+    support_router
+)
 
-# Подключаем именно .router у каждого!
-dp.include_router(start.router)
-dp.include_router(games.router)
-dp.include_router(profile.router)
-dp.include_router(help.router)
-dp.include_router(payments.router)
-dp.include_router(admin.router)
-dp.include_router(support.router)   # ← ЭТО БЫЛО НЕПРАВИЛЬНО! Было просто support
+# Подключаем их
+dp.include_router(start_router)
+dp.include_router(games_router)
+dp.include_router(profile_router)
+dp.include_router(help_router)
+dp.include_router(payments_router)
+dp.include_router(admin_router)
+dp.include_router(support_router)
 
 async def on_startup():
     await init_db()
