@@ -2,7 +2,7 @@ from aiogram import Router, types
 from config import bot, STRIPE_SECRET_KEY
 import stripe
 import uuid
-from database import db
+from database import get_user, add_user, get_stats, init_db
 import datetime
 
 router = Router()
