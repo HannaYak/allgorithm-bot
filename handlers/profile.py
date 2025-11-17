@@ -1,7 +1,7 @@
 from aiogram import types, Dispatcher
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from database import get_user, db
+from database import get_user, add_user, get_stats, init_db
 from keyboards import personal_menu, back_to_main_kb
 from config import PAYMENT_AMOUNT_PLN
 from aiogram.types import InputFile
