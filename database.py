@@ -6,22 +6,18 @@ DB_NAME = "bot.db"
 
 async def init_db():
     async with aiosqlite.connect(DB_NAME) as conn:
-        # Удаляем старые таблицы, если они были (один раз)
-        await conn.execute("DROP TABLE IF EXISTS games")
-        await conn.execute("DROP TABLE IF EXISTS payments")  # если хочешь с нуля
-        
-        # Создаём только нужные таблицы
+        await conn.executescript("""
             CREATE TABLE IF NOT EXISTS users (
-        user_id INTEGER PRIMARY KEY,
-        name TEXT,
-        birthdate TEXT,        -- новая
-        age INTEGER,
-        fun_fact TEXT,         -- новая
-        crazy_story TEXT,      -- новая
-        games_played INTEGER DEFAULT 0,
-        loyalty INTEGER DEFAULT 0,
-        created_at TEXT
-        );
+                user_id INTEGER PRIMARY KEY,
+                name TEXT,
+                birthdate TEXT,
+                age INTEGER,
+                fun_fact TEXT,
+                crazy_story TEXT,
+                games_played INTEGER DEFAULT 0,
+                loyalty INTEGER DEFAULT 0,
+                created_at TEXT
+            );
 
             CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,7 +40,7 @@ async def init_db():
             );
         """)
         await conn.commit()
-    print("База данных готова — только с events!")
+    print("База данных готова — с датой рождения, фактом и странной историей!")
 
 
 async def add_user(user_id: int, name: str = None, age: int = None):
