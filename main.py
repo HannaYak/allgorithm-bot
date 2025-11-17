@@ -2,10 +2,12 @@ import asyncio
 from config import bot, dp
 from database import init_db
 
+
 # Подключаем ВСЕ роутеры
-from handlers import start, games, profile, help, payments, admin
+from handlers import start, games, profile, help, payments, admin, support
 
 dp.include_router(start)
+dp.include_router(support)
 dp.include_router(games)
 dp.include_router(profile)
 dp.include_router(help)
