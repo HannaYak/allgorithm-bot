@@ -8,6 +8,13 @@ import datetime
 router = Router()
 stripe.api_key = STRIPE_SECRET_KEY
 
+PAYMENT_LINKS = {
+    "meet_eat": "https://buy.stripe.com/8x26oHcyf0RBaHico50sU03",
+    "lock_stock": "https://buy.stripe.com/3cIeVd7dVeIr9De2Nv0sU02",
+    "bar_liar": "https://buy.stripe.com/00w5kDgOv2ZJbLm87P0sU01",
+    "speed_dating": "https://book.stripe.com/aFa3cv1TBgQzbLm5ZH0sU00",
+}
+
 # === СОЗДАНИЕ ОПЛАТЫ ===
 @router.callback_query(lambda c: c.data.startswith("pay:"))
 async def create_payment(callback: types.CallbackQuery):
