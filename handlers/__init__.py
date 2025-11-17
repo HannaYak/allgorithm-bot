@@ -1,15 +1,9 @@
-from .start import router as start_router
-from .games import router as games_router
-from .profile import router as profile_router
-from .help import router as help_router
-from .payments import router as payments_router
-from .admin import router as admin_router
-
-start = start_router
-games = games_router
-profile = profile_router
-help = help_router
-payments = payments_router
-admin = admin_router
+# handlers/__init__.py — ФИНАЛЬНЫЙ И ПРАВИЛЬНЫЙ
+from .start import router as start
+from .games import router as games
+from .profile import router as profile
+from .help import router as help
+from .payments import router as payments
+from .admin import router as admin
 
 __all__ = ["start", "games", "profile", "help", "payments", "admin"]
