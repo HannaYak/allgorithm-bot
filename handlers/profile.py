@@ -4,6 +4,12 @@ from database import get_user, add_user
 
 router = Router()  # ← ЭТО САМОЕ ГЛАВНОЕ! ДОЛЖЕН БЫТЬ router!!!
 
+@router.message(F.text == "Личный кабинет")
+async def profile_from_menu(message: types.Message):
+    from handlers.profile import show_profile  # если у тебя есть функция
+    # Или просто:
+    await message.answer("Личный кабинет в разработке — скоро будет!")
+
 @router.callback_query(F.data == "profile")
 async def show_profile(callback: types.CallbackQuery):
     user = await get_user(callback.from_user.id)
