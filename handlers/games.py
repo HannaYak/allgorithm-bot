@@ -1,7 +1,6 @@
 # handlers/games.py
 from aiogram import Router, types, F
-from database import db
-
+from database import get_user, add_user, get_stats, init_db
 router = Router()
 
 GAMES = {
