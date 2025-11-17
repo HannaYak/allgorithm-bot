@@ -1,4 +1,4 @@
-from aiogram import Router, types
+from aiogram import Router, types, F
 from config import bot, STRIPE_SECRET_KEY
 import stripe
 import uuid
