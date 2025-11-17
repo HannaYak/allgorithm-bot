@@ -9,6 +9,10 @@ dp.include_router(games.router)
 dp.include_router(admin.router)
 dp.include_router(payments.router)
 
+async def on_startup():
+    await init_db()
+    print("Database initialized")
+
 
 async def main():
     print("Bot started! Polling mode.")
