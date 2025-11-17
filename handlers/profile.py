@@ -1,5 +1,5 @@
 from aiogram import types, Dispatcher
-from aiogram.dispatcher import FSMContext
+from aiogram.fsm.context import FSMContext
 from database import get_user, db
 from keyboards import personal_menu, back_to_main_kb
 from config import PAYMENT_AMOUNT_PLN
