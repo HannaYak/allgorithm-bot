@@ -4,3 +4,4 @@ aiosqlite==0.20.0
 stripe==10.11.0
 flask==3.0.3
 aiohttp==3.10.5
+
