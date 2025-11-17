@@ -1,6 +1,7 @@
 # database.py — только актуальная версия с events
 import aiosqlite
 import datetime
+from datetime import datetime   # ← ДОБАВЬ ЭТУ СТРОКУ!
 
 DB_NAME = "bot.db"
 
@@ -43,21 +44,6 @@ async def init_db():
     print("База данных готова — с датой рождения, фактом и странной историей!")
 
 
-async def add_user(user_id: int, name: str = None, age: int = None):
-    async with aiosqlite.connect(DB_NAME) as conn:
-        await conn.execute("""
-            INSERT OR REPLACE INTO users (user_id, name, age, created_at) 
-            VALUES (?, ?, ?, ?)
-        """, (user_id, name, age, datetime.datetime.now().isoformat()))
-        await conn.commit()
-
-async def get_user(user_id: int):
-    async with aiosqlite.connect(DB_NAME) as conn:
-        conn.row_factory = aiosqlite.Row
-        async with conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cur:
-            row = await cur.fetchone()
-            return dict(row) if row else None
-
 async def add_user(user_id: int, name: str = None, birthdate: str = None, age: int = 0,
                   fun_fact: str = None, crazy_story: str = None):
     async with aiosqlite.connect(DB_NAME) as conn:
@@ -67,3 +53,12 @@ async def add_user(user_id: int, name: str = None, birthdate: str = None, age: i
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (user_id, name, birthdate, age, fun_fact, crazy_story, datetime.now().isoformat()))
         await conn.commit()
+
+
+async def get_user(user_id: int):
+    async with aiosqlite.connect(DB_NAME) as conn:
+        conn.row_factory = aiosqlite.Row
+        async with conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cur:
+            row = await cur.fetchone()
+            return dict(row) if row else None
+
