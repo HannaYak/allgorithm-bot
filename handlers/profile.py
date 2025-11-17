@@ -1,49 +1,44 @@
-# handlers/profile.py — ФИНАЛЬНАЯ ВЕРСИЯ
+# handlers/profile.py — КАРТА ЛОЯЛЬНОСТИ С ТВОИМИ КАРТИНКАМИ
 from aiogram import Router, types, F
-from database import get_user, add_user
+from database import get_user
+import os
 
-router = Router()  # ← ЭТО САМОЕ ГЛАВНОЕ! ДОЛЖЕН БЫТЬ router!!!
+router = Router()
+
+# Путь к папке с картинками
+LOYALTY_DIR = "loyalty_images"
 
 @router.message(F.text == "Личный кабинет")
-async def profile_from_menu(message: types.Message):
-    from handlers.profile import show_profile  # если у тебя есть функция
-    # Или просто:
-    await message.answer("Личный кабинет в разработке — скоро будет!")
-
-@router.callback_query(F.data == "profile")
-async def show_profile(callback: types.CallbackQuery):
-    user = await get_user(callback.from_user.id)
+async def profile_with_card(message: types.Message):
+    user = await get_user(message.from_user.id)
     
     if not user:
-        # Если пользователя нет в БД — создаём
-        await add_user(callback.from_user.id)
-        user = {"name": "не указано", "age": None, "games_played": 0, "loyalty": 0}
+        await message.answer("Ты ещё не прошёл регистрацию! Напиши /start")
+        return
+
+    games_played = user.get('games_played', 0)
+    loyalty = user.get('loyalty', 0)
+    
+    # Определяем какую картинку отправлять (от 0 до 5)
+    image_number = min(games_played, 5)  # больше 5 — всё равно 5_games.jpg
+    image_path = os.path.join(LOYALTY_DIR, f"{image_number}_games.jpg")
+    
+    # Если файла нет — отправим запасной вариант
+    if not os.path.exists(image_path):
+        image_path = os.path.join(LOYALTY_DIR, "0_games.jpg")  # дефолтная
 
     text = (
         f"Личный кабинет\n\n"
         f"Имя: {user.get('name', 'не указано')}\n"
         f"Возраст: {user.get('age', 'не указано')}\n"
-        f"Игр сыграно: {user.get('games_played', 0)}\n"
-        f"Лояльность: {user.get('loyalty', 0)}/5 ⭐\n\n"
+        f"Игр сыграно: {games_played}\n"
+        f"Лояльность: {loyalty}/5\n\n"
         f"При 5 играх — следующая со скидкой 20%!"
     )
-    
-    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(text="Обновить имя", callback_data="edit_name")],
-        [types.InlineKeyboardButton(text="Обновить возраст", callback_data="edit_age")],
-        [types.InlineKeyboardButton(text="Назад в меню", callback_data="back_to_start")]
-    ])
-    
-    await callback.message.edit_text(text, reply_markup=keyboard)
 
-# Простые редакторы (можно потом расширить через FSM)
-@router.callback_query(F.data == "edit_name")
-async def edit_name(callback: types.CallbackQuery):
-    await callback.message.edit_text("Пришли своё имя:")
-    # Здесь можно добавить FSM, но пока просто скажем, что будет дальше
-    await callback.answer("Функция в разработке — скоро будет!")
-
-@router.callback_query(F.data == "edit_age")
-async def edit_age(callback: types.CallbackQuery):
-    await callback.message.edit_text("Пришли свой возраст:")
-    await callback.answer("Функция в разработке — скоро будет!")
+    with open(image_path, "rb") as photo:
+        await message.answer_photo(
+            photo,
+            caption=text,
+            parse_mode="HTML"
+        )
