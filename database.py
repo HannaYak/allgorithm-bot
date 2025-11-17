@@ -1,10 +1,10 @@
-# database.py — ФИНАЛЬНАЯ ВЕРСИЯ (без объекта db)
+# database.py — ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ
 import aiosqlite
 import datetime
-from typing import Optional, Dict
 
 DB_NAME = "bot.db"
 
+# ←←← ВСЁ ВНУТРИ ФУНКЦИИ! ←←←
 async def init_db():
     async with aiosqlite.connect(DB_NAME) as conn:
         await conn.executescript("""
@@ -16,36 +16,42 @@ async def init_db():
                 loyalty INTEGER DEFAULT 0,
                 created_at TEXT
             );
+            
             CREATE TABLE IF NOT EXISTS payments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER,
-                payment_id TEXT UNIQUE,
-                game TEXT,
+                game_key TEXT,
                 amount INTEGER,
                 status TEXT DEFAULT 'pending',
                 created_at TEXT
             );
+            
             CREATE TABLE IF NOT EXISTS games (
                 key TEXT PRIMARY KEY,
                 name TEXT,
                 price INTEGER,
                 rules TEXT,
-                active INTEGER DEFAULT 0
+                seats_total INTEGER DEFAULT 20,
+                seats_taken INTEGER DEFAULT 0
             );
         """)
+        
+        # Добавляем игры, если их ещё нет
         await conn.executemany("""
-            INSERT OR IGNORE INTO games (key, name, price, rules) VALUES (?, ?, ?, ?)
+            INSERT OR IGNORE INTO games (key, name, price, rules, seats_total, seats_taken) 
+            VALUES (?, ?, ?, ?, ?, 0)
         """, [
-            ("meet_eat", "Meet&Eat", 50, "Правила Meet&Eat…"),
-            ("lock_stock", "Лок Сток", 60, "Правила Лок Сток…"),
-            ("bar_liar", "Бар Лжецов", 55, "Правила Бар Лжецов…"),
-            ("speed_dating", "Быстрые Свидания", 70, "Правила Свиданий…")
+            ("meet_eat", "Meet&Eat", 50, "Правила Meet&Eat…", 20),
+            ("lock_stock", "Лок Сток", 60, "Правила Лок Сток…", 16),
+            ("bar_liar", "Бар Лжецов", 55, "Правила Бар Лжецов…", 24),
+            ("speed_dating", "Быстрые Свидания", 70, "Правила Свиданий…", 18),
         ])
+        
         await conn.commit()
-    print("База данных готова")
+    print("База данных готова и обновлена!")
 
-# === ВСЕ ФУНКЦИИ ===
-async def get_user(user_id: int) -> Optional[Dict]:
+# Остальные функции (по мере надобности добавишь)
+async def get_user(user_id: int):
     async with aiosqlite.connect(DB_NAME) as conn:
         conn.row_factory = aiosqlite.Row
         async with conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cur:
@@ -54,45 +60,8 @@ async def get_user(user_id: int) -> Optional[Dict]:
 
 async def add_user(user_id: int, name: str = None, age: int = None):
     async with aiosqlite.connect(DB_NAME) as conn:
-        await conn.execute(
-            "INSERT OR REPLACE INTO users (user_id, name, age, created_at) VALUES (?, ?, ?, ?)",
-            (user_id, name, age, datetime.datetime.now().isoformat())
-        )
+        await conn.execute("""
+            INSERT OR REPLACE INTO users (user_id, name, age, created_at) 
+            VALUES (?, ?, ?, ?)
+        """, (user_id, name, age, datetime.datetime.now().isoformat()))
         await conn.commit()
-
-async def get_stats() -> Dict:
-    async with aiosqlite.connect(DB_NAME) as conn:
-        async with conn.execute("SELECT COUNT(*) FROM users") as c:
-            users = (await c.fetchone())[0]
-        async with conn.execute("SELECT COUNT(*) FROM payments WHERE status='completed'") as c:
-            payments = (await c.fetchone())[0]
-        async with conn.execute("SELECT COALESCE(SUM(amount),0) FROM payments WHERE status='completed'") as c:
-            revenue = (await c.fetchone())[0]
-        async with conn.execute("SELECT COALESCE(SUM(games_played),0) FROM users") as c:
-            games = (await c.fetchone())[0]
-        return {"users": users, "payments": payments, "revenue": revenue, "games": games}
-
-# В init_db() — замени создание таблицы games на это:
-await conn.executescript("""
-    CREATE TABLE IF NOT EXISTS games (
-        key TEXT PRIMARY KEY,
-        name TEXT,
-        price INTEGER,
-        rules TEXT,
-        seats_total INTEGER DEFAULT 20,    -- общее количество мест
-        seats_taken INTEGER DEFAULT 0      -- сколько уже занято
-    );
-""")
-
-# И обнови старые игры (один раз выполнится):
-await conn.executemany("""
-    INSERT OR REPLACE INTO games (key, name, price, rules, seats_total, seats_taken) 
-    VALUES (?, ?, ?, ?, ?, 0)
-""", [
-    ("meet_eat", "Meet&Eat", 50, "Правила Meet&Eat…", 20),
-    ("lock_stock", "Лок Сток", 60, "Правила Лок Сток…", 16),
-    ("bar_liar", "Бар Лжецов", 55, "Правила Бар Лжецов…", 24),
-    ("speed_dating", "Быстрые Свидания", 70, "Правила Свиданий…", 18),
-])
-
-# Добавь сюда остальные функции (add_payment, update_payment_status и т.д.) — если их нет, скажи, я пришлю
