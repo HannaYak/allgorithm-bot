@@ -68,4 +68,28 @@ async def save_user(user_id, name, age, question3):
     ''', (user_id, name, age, question3))
     await db.commit()
 
+async def add_payment(user_id, payment_id, game, amount, status="pending"):
+    async with aiosqlite.connect("bot.db") as db_conn:
+        await db_conn.execute(
+            "INSERT INTO payments (user_id, payment_id, game, amount, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, payment_id, game, amount, status, datetime.datetime.now().isoformat())
+        )
+        await db_conn.commit()
+
+async def update_payment_status(payment_id, status):
+    async with aiosqlite.connect("bot.db") as db_conn:
+        await db_conn.execute(
+            "UPDATE payments SET status = ? WHERE payment_id = ?",
+            (status, payment_id)
+        )
+        await db_conn.commit()
+
+async def increment_games_played(user_id):
+    async with aiosqlite.connect("bot.db") as db_conn:
+        await db_conn.execute(
+            "UPDATE users SET games_played = games_played + 1, loyalty = loyalty + 1 WHERE user_id = ?",
+            (user_id,)
+        )
+        await db_conn.commit()
+
 # Добавь другие функции БД по необходимости (registrations, visits и т.д.)
