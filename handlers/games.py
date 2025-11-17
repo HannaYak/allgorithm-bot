@@ -1,5 +1,6 @@
-from aiogram import Router, types
-from aiogram.fsm.context import FSMContext
+from aiogram import Router, types, F
+from aiogram.fsm.context import FSMContext   # ← НОВЫЙ ИМПОРТ
+from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.state import StatesGroup, State
 from database import db
 import datetime
