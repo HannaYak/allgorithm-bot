@@ -13,6 +13,15 @@ async def show_help(callback: types.CallbackQuery):
         "По всем вопросам: @hanna_yak\n"
         "Мы в Варшаве — ждём тебя!"
     )
+
+@router.message(F.text == "Помощь")
+async def help_from_menu(message: types.Message):
+    await message.answer(
+        "Помощь\n\n"
+        "• /start — начать заново\n"
+        "• /menu — главное меню\n"
+        "• По вопросам: @hanna_yak"
+    )
     
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="Назад", callback_data="back_to_start")]
