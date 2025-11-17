@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher
 load_dotenv()
 
 # СЕКРЕТЫ (вставь в .env или Railway)
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+BOT_TOKEN = os.getenv("AIOGRAM_BOT_TOKEN")
 ADMIN_ID = int(os.getenv('ADMIN_ID', 0))
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
