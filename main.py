@@ -1,22 +1,23 @@
+# main.py — ПРАВИЛЬНОЕ ПОДКЛЮЧЕНИЕ ВСЕХ РОУТЕРОВ
 import asyncio
 from config import bot, dp
 from database import init_db
 
-
-# Подключаем ВСЕ роутеры
+# Правильный импорт
 from handlers import start, games, profile, help, payments, admin, support
 
-dp.include_router(start)
-dp.include_router(support)
-dp.include_router(games)
-dp.include_router(profile)
-dp.include_router(help)
-dp.include_router(payments)
-dp.include_router(admin) # это будет твой новый мощный admin.py
+# Подключаем именно .router у каждого!
+dp.include_router(start.router)
+dp.include_router(games.router)
+dp.include_router(profile.router)
+dp.include_router(help.router)
+dp.include_router(payments.router)
+dp.include_router(admin.router)
+dp.include_router(support.router)   # ← ЭТО БЫЛО НЕПРАВИЛЬНО! Было просто support
 
 async def on_startup():
     await init_db()
-    print("База данных инициализирована")
+    print("База данных готова")
 
 async def main():
     print("Бот запущен в режиме polling")
