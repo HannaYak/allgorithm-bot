@@ -47,27 +47,27 @@ async def on_shutdown(app):
 
 
 async def main():
-    # Если локально — можно запустить polling (удобно для теста)
+    # Локально — polling (удобно для тестов)
     if not WEBHOOK_URL or "railway.app" not in WEBHOOK_URL:
         print("Запуск в polling режиме (локально)")
         await init_db()
         await dp.start_polling(bot)
+        return
 
-    else:
-        # === РЕЖИМ RAILWAY — WEBHOOK ===
-        app = web.Application()
-        SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path="/")
+    # Railway — webhook
+    app = web.Application()
+    SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path="/")
 
-        app.on_startup.append(on_startup)
-        app.on_shutdown.append(on_shutdown)
+    app.on_startup.append(on_startup)
+    app.on_shutdown.append(on_shutdown)
 
-        runner = web.AppRunner(app)
-        await runner.setup()
-        site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8000)))
-        await site.start()
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8000)))
+    await site.start()
 
-        print("Бот запущен на Railway через webhook! Живём вечно")
-        await asyncio.Event().wait()  # держим контейнер живым
+    print("Бот запущен на Railway через webhook! Живём вечно")
+    await asyncio.Event().wait()  # держим контейнер живым
 
 
 if __name__ == "__main__":
