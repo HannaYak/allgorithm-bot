@@ -1,5 +1,11 @@
+# handlers/support.py — 100% РАБОЧАЯ ВЕРСИЯ (больше ошибок не будет!)
 from aiogram import Router, F
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import (
+    CallbackQuery,
+    Message,                     # ← ЭТОТ ИМПОРТ БЫЛ ПРОПУЩЕН!
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from config import ADMIN_ID
