@@ -31,7 +31,7 @@ async def support_start(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text("Напиши свой вопрос — я перешлю организатору ❤️")
     await callback.answer()
 
-@router.message(F.text, state="waiting_support")
+@router.message(F.text, SupportState.waiting)
 async def get_support_message(message: Message, state: FSMContext):
     await message.forward(ADMIN_ID)
     await message.bot.send_message(
