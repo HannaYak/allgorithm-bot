@@ -13,24 +13,26 @@ class Support(StatesGroup):
 
 
 # ПРАВИЛА
-@router.callback_query(F.data == "rules")
-async def rules(callback: CallbackQuery):
-    await callback.message.answer(RULES_TEXT)
+@router.callback_query(F.data == "show_rules")
+async def show_rules(callback: CallbackQuery):
+    await callback.message.edit_text(
+        RULES_TEXT,  # текст из config.py
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Назад", callback_data="back_to_menu")]
+        ])
+    )
     await callback.answer()
 
 
-# ПОМОЩЬ — начало
-@router.callback_query(F.data == "support")
-async def support(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(Support.waiting)
-    await callback.message.answer("Напиши свой вопрос — я перешлю его Ханне ❤️")
+# ПОМОЩЬ — теперь работает и возвращает в меню
+@router.callback_query(F.data == "support_start")
+async def support_start(callback: CallbackQuery, state: FSMContext):
+    await state.set_state("waiting_support")
+    await callback.message.edit_text("Напиши свой вопрос — я перешлю организатору ❤️")
     await callback.answer()
 
-
-# ПОМОЩЬ — получил сообщение от пользователя
-@router.message(Support.waiting)
-async def support_message(message: Message, state: FSMContext):
-    # Админу
+@router.message(F.text, state="waiting_support")
+async def get_support_message(message: Message, state: FSMContext):
     await message.forward(ADMIN_ID)
     await message.bot.send_message(
         ADMIN_ID,
@@ -39,7 +41,11 @@ async def support_message(message: Message, state: FSMContext):
             [InlineKeyboardButton(text="Ответить", callback_data=f"reply_{message.from_user.id}")]
         ])
     )
-
+    await message.answer(
+        "Спасибо! Твоё сообщение отправлено.\nСкоро отвечу ❤️",
+        reply_markup=main_menu(registered=True)
+    )
+    await state.clear()
     # Пользователю — спасибо + меню
     menu = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Играть", callback_data="games")],
