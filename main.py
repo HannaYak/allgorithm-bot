@@ -18,6 +18,7 @@ from handlers import (
     payments_router,
     admin_router,
     support_router
+    admin_support
 )
 
 # Подключаем их
@@ -28,6 +29,7 @@ dp.include_router(help_router)
 dp.include_router(payments_router)
 dp.include_router(admin_router)
 dp.include_router(support_router)
+dp.include_router(admin_support_router)
 
 async def on_startup(app):
     await init_db()
