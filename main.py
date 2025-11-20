@@ -14,7 +14,6 @@ from handlers import (
     start_router,
     games_router,
     profile_router,
-    help_router,
     payments_router,
     admin_router,
     support_router,
@@ -25,7 +24,6 @@ from handlers import (
 dp.include_router(start_router)
 dp.include_router(games_router)
 dp.include_router(profile_router)
-dp.include_router(help_router)
 dp.include_router(payments_router)
 dp.include_router(admin_router)
 dp.include_router(support_router)
