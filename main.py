@@ -17,7 +17,7 @@ from handlers import (
     help_router,
     payments_router,
     admin_router,
-    support_router
+    support_router,
     admin_support
 )
 
