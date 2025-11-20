@@ -13,6 +13,7 @@ class Support(StatesGroup):
 
 
 # ПРАВИЛА
+# ПРАВИЛА — теперь работает
 @router.callback_query(F.data == "show_rules")
 async def show_rules(callback: CallbackQuery):
     await callback.message.edit_text(
@@ -22,7 +23,6 @@ async def show_rules(callback: CallbackQuery):
         ])
     )
     await callback.answer()
-
 
 # ПОМОЩЬ — теперь работает и возвращает в меню
 @router.callback_query(F.data == "support_start")
@@ -45,8 +45,17 @@ async def get_support_message(message: Message, state: FSMContext):
         "Спасибо! Твоё сообщение отправлено.\nСкоро отвечу ❤️",
         reply_markup=main_menu(registered=True)
     )
-    await state.clear()
-    # Пользователю — спасибо + меню
+    await state.clear() 
+
+    @router.callback_query(F.data == "back_to_menu")
+async def back_to_menu(callback: CallbackQuery):
+    user = await get_user(callback.from_user.id)
+    await callback.message.edit_text(
+        "Главное меню",
+        reply_markup=main_menu(registered=bool(user and user.get("registered")))
+    )
+    await callback.answer()
+    
     menu = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Играть", callback_data="games")],
         [InlineKeyboardButton(text="Профиль", callback_data="profile")],
