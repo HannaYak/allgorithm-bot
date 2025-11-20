@@ -5,7 +5,7 @@ from database import init_db
 import os
 from aiohttp import web
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler
-
+from handlers.common import router as common_router
 from config import bot, dp, WEBHOOK_URL
 from database import init_db
 
@@ -16,7 +16,6 @@ from handlers import (
     profile_router,
     payments_router,
     admin_router,
-    support_router,
     admin_support
 )
 
@@ -26,8 +25,8 @@ dp.include_router(games_router)
 dp.include_router(profile_router)
 dp.include_router(payments_router)
 dp.include_router(admin_router)
-dp.include_router(support_router)
 dp.include_router(admin_support.router)
+dp.include_router(common_router)
 
 async def on_startup(app):
     await init_db()
