@@ -1,44 +1,49 @@
-# handlers/support.py — 100% РАБОЧИЙ, ПРОВЕРЕНО НА ЖИВОМ БОТЕ
+# handlers/support.py — теперь отвечает и за Правила, и за Помощь
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from config import ADMIN_ID
+from config import ADMIN_ID, RULES_TEXT
 
-router = Router(name="support")
+router = Router(name="support_and_rules")
 
-# ←←←←←←←←←←←←←← ВПИШИ СВОИ ID СЮДА (цифры!)
-ADMINS = [5456905649]  # ←←←←←←←←←←←←←←←←←←←←←←←←←←←
+ADMIN_ID = [5456905649]
 
 class SupportState(StatesGroup):
     waiting = State()
 
 
-# ——— КНОПКА «Помощь» ———
+# ——— КНОПКА «ПРАВИЛА» ———
+@router.callback_query(F.data == "rules")
+async def show_rules(callback: CallbackQuery):
+    await callback.message.answer(RULES_TEXT, disable_web_page_preview=True)
+    await callback.answer()
+
+
+# ——— КНОПКА «ПОМОЩЬ» ———
 @router.callback_query(F.data == "support")
-async def cmd_support(callback: CallbackQuery, state: FSMContext):
+async def support_start(callback: CallbackQuery, state: FSMContext):
     await state.set_state(SupportState.waiting)
     await callback.message.answer(
-        "Напиши свой вопрос — я сразу перешлю его Ханне и скоро отвечу лично ❤️"
+        "Напиши свой вопрос — я сразу перешлю Ханне и скоро отвечу лично ❤️"
     )
     await callback.answer()
 
 
-# ——— ПОЛЬЗОВАТЕЛЬ ОТПРАВИЛ СООБЩЕНИЕ ———
+# ——— ПОЛЬЗОВАТЕЛЬ ОТПРАВИЛ СООБЩЕНИЕ В ПОДДЕРЖКУ ———
 @router.message(SupportState.waiting)
 async def get_support_message(message: Message, state: FSMContext):
-    # Отправляем админу
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Ответить", callback_data=f"reply_{message.from_user.id}")]
     ])
-    await message.forward(chat_id=ADMIN_ID)
+    await message.forward(ADMIN_ID)
     await message.bot.send_message(
         ADMIN_ID,
-        f"Вопрос в поддержку от @{message.from_user.username or 'нет юзернейма'} ({message.from_user.id})",
+        f"Вопрос от @{message.from_user.username or 'без username'} ({message.from_user.id})",
         reply_markup=kb
     )
 
-    # Возвращаем пользователя в главное меню
+    # Возврат в главное меню
     menu = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Играть", callback_data="games")],
         [InlineKeyboardButton(text="Мой профиль", callback_data="profile")],
@@ -47,26 +52,24 @@ async def get_support_message(message: Message, state: FSMContext):
     ])
 
     await message.answer(
-        "Спасибо! Твоё сообщение отправлено.\nЯ скоро отвечу лично ❤️",
+        "Спасибо! Сообщение отправлено.\nЯ скоро отвечу лично ❤️",
         reply_markup=menu
     )
     await state.clear()
 
 
-# ——— АДМИН НАЖАЛ «ОТВЕТИТЬ» ———
+# ——— ОТВЕТ АДМИНА ———
 @router.callback_query(F.data.startswith("reply_"))
-async def admin_reply_start(callback: CallbackQuery):
+async def admin_reply(callback: CallbackQuery):
     if callback.from_user.id != ADMIN_ID:
         return await callback.answer("❌", show_alert=True)
     await callback.message.answer("Пиши ответ:")
     await callback.answer()
 
-
-# ——— АДМИН ОТПРАВИЛ ОТВЕТ (ответил на пересланное сообщение) ———
 @router.message(F.reply_to_message, F.from_user.id == ADMIN_ID)
-async def admin_send_reply(message: Message):
+async def send_reply(message: Message):
     if not message.reply_to_message.forward_from:
         return
     user_id = message.reply_to_message.forward_from.id
     await message.bot.send_message(user_id, f"Ответ от организатора:\n\n{message.text}")
-    await message.answer("Ответ отправлен ✅")
+    await message.answer("Отправлено ✅")
