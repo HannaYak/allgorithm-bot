@@ -16,7 +16,6 @@ from handlers import (
     profile_router,
     payments_router,
     admin_router,
-    admin_support
 )
 
 # Подключаем их
@@ -25,7 +24,6 @@ dp.include_router(games_router)
 dp.include_router(profile_router)
 dp.include_router(payments_router)
 dp.include_router(admin_router)
-dp.include_router(admin_support.router)
 dp.include_router(common_router)
 
 async def on_startup(app):
