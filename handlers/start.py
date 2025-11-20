@@ -15,14 +15,18 @@ class Register(StatesGroup):
     waiting_fun_fact = State()
     waiting_crazy_story = State()
 
-def main_menu_keyboard():
-    kb = [
-        [types.KeyboardButton(text="Игры")],
-        [types.KeyboardButton(text="Личный кабинет")],
-        [types.KeyboardButton(text="Помощь"), types.KeyboardButton(text="Правила")]
+def main_menu(registered: bool = False):
+    buttons = [
+        [InlineKeyboardButton(text="Игры", callback_data="games")],
+        [InlineKeyboardButton(text="Личный кабинет", callback_data="profile")],
+        [InlineKeyboardButton(text="Правила", callback_data="show_rules")],        # ← починили
+        [InlineKeyboardButton(text="Помощь", callback_data="support_start")],     # ← починили
     ]
-    return types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
-
+    
+    if not registered:
+        buttons.insert(0, [InlineKeyboardButton(text="Начать анкету", callback_data="start_registration")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 @router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
     user = await get_user(message.from_user.id)
