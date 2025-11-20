@@ -29,7 +29,7 @@ dp.include_router(payments_router)
 dp.include_router(admin_router)
 dp.include_router(support_router)
 
-sync def on_startup(app):
+async def on_startup(app):
     await init_db()
     print("База данных готова — с датой рождения, фактом и странной историей!")
 
