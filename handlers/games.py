@@ -1,5 +1,6 @@
 # handlers/games.py — ФИНАЛЬНАЯ ВЕРСИЯ, БЕЗ ОШИБОК
-from aiogram import Router, types, F
+from aiogram import Router, F
+from aiogram import types
 import aiosqlite
 from datetime import datetime, timedelta
 
