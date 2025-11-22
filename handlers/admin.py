@@ -1,5 +1,6 @@
 # handlers/admin.py — ПОЛНАЯ РАБОЧАЯ АДМИНКА
-from aiogram import Router, types, F
+from aiogram import Router, F
+from aiogram import types
 from aiogram.filters import Command
 import aiosqlite
 
