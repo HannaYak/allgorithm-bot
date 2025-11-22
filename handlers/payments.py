@@ -1,5 +1,6 @@
 # handlers/payments.py — ПОЛНОСТЬЮ РАБОЧИЙ, БЕЗ ОШИБОК
-from aiogram import Router, types, F
+from aiogram import Router, F
+from aiogram import types
 import aiosqlite
 
 router = Router()
