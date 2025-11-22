@@ -1,5 +1,5 @@
 # handlers/start.py — ИСПРАВЛЕНО: кнопка "Начать анкету" + регистрация 1 раз + главное меню
-from aiogram import Router, F
+from aiogram import Router, F, types
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
