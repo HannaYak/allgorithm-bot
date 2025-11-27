@@ -5,32 +5,28 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from config import bot, dp
 from database import init_db
 
-# Подключаем роутеры
+# Подключаем все роутеры
 from handlers import (
     start_router, profile_router, events_router, booking_router,
     payments_router, my_bookings_router, cabinet_router,
     rules_router, support_router, admin_router
 )
 
-dp.include_router(start_router)
-dp.include_router(profile_router)
-dp.include_router(events_router)
-dp.include_router(booking_router)
-dp.include_router(payments_router)
-dp.include_router(my_bookings_router)
-dp.include_router(cabinet_router)
-dp.include_router(rules_router)
-dp.include_router(support_router)
-dp.include_router(admin_router)
+for router in [start_router, profile_router, events_router, booking_router,
+               payments_router, my_bookings_router, cabinet_router,
+               rules_router, support_router, admin_router]:
+    dp.include_router(router)
 
 async def on_startup(_):
     await init_db()
-    await bot.set_webhook(os.getenv("WEBHOOK_URL"))
-    print(f"Webhook установлен: {os.getenv('WEBHOOK_URL')}")
+    url = os.getenv("WEBHOOK_URL")
+    await bot.set_webhook(url)
+    print(f"Webhook установлен: {url}")
+    print("Бот запущен на Railway — живём вечно")
 
 app = web.Application()
 SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path="/")
 app.on_startup.append(on_startup)
 
-# ← ЭТО САМОЕ ВАЖНОЕ — ПРАВИЛЬНЫЙ ПОРТ
+# ← САМОЕ ВАЖНОЕ — ПРАВИЛЬНЫЙ ПОРТ
 web.run_app(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
