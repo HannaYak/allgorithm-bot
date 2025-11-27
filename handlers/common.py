@@ -1,86 +1,75 @@
-# handlers/common.py — Правила + Помощь + Ответ админа (100% работает)
-from aiogram import Router, F
-from aiogram import types
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+# handlers/common.py — ИСПРАВЛЕНО ПОД AIOGRAM 3.X
+from aiogram import Router, F, types
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from config import ADMIN_ID, RULES_TEXT
+from aiogram.fsm.state import StatesGroup, State
+from config import ADMIN_ID
 
-router = Router(name="common")
+router = Router()
 
+# Состояния
+class SupportStates(StatesGroup):
+    waiting_message = State()
 
-class Support(StatesGroup):
-    waiting = State()
-
-
-# ПРАВИЛА
-# ПРАВИЛА — теперь работает
-@router.callback_query(F.data == "show_rules")
-async def show_rules(callback: CallbackQuery):
-    await callback.message.edit_text(
-        RULES_TEXT,  # текст из config.py
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Назад", callback_data="back_to_menu")]
-        ])
+# Кнопка «Помощь / Написать в поддержку»
+@router.callback_query(F.data == "support")
+async def support_start(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(SupportStates.waiting_message)
+    await callback.message.answer(
+        "Напиши свой вопрос — я сразу перешлю его организатору и скоро отвечу лично ❤️",
+        reply_markup=types.ReplyKeyboardRemove()
     )
     await callback.answer()
 
-# ПОМОЩЬ — теперь работает и возвращает в меню
-@router.callback_query(F.data == "support_start")
-async def support_start(callback: CallbackQuery, state: FSMContext):
-    await state.set_state("waiting_support")
-    await callback.message.edit_text("Напиши свой вопрос — я перешлю организатору ❤️")
-    await callback.answer()
+# ←←← КРИТИЧНО: УБРАЛИ state="waiting_support" ←←←
+@router.message(F.text)  # ← теперь ловит все текстовые сообщения
+async def support_message_received(message: types.Message, state: FSMContext):
+    # Проверяем состояние
+    current_state = await state.get_state()
+    if current_state != SupportStates.waiting_message:
+        return  # игнорируем, если не в состоянии поддержки
 
-@router.message(F.text, SupportState.waiting)
-async def get_support_message(message: Message, state: FSMContext):
+    # Пересылаем админу
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Ответить", callback_data=f"reply_{message.from_user.id}")]
+    ])
     await message.forward(ADMIN_ID)
     await message.bot.send_message(
         ADMIN_ID,
-        f"Вопрос от @{message.from_user.username or 'без имени'} ({message.from_user.id})",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Ответить", callback_data=f"reply_{message.from_user.id}")]
-        ])
+        f"Вопрос от @{message.from_user.username or 'без username'} ({message.from_user.id})",
+        reply_markup=kb
     )
-    await message.answer(
-        "Спасибо! Твоё сообщение отправлено.\nСкоро отвечу ❤️",
-        reply_markup=main_menu(registered=True)
-    )
-    await state.clear() 
 
-    @router.callback_query(F.data == "back_to_menu")
-async def back_to_menu(callback: CallbackQuery):
-    user = await get_user(callback.from_user.id)
-    await callback.message.edit_text(
-        "Главное меню",
-        reply_markup=main_menu(registered=bool(user and user.get("registered")))
-    )
-    await callback.answer()
-    
-    menu = InlineKeyboardMarkup(inline_keyboard=[
+    # Возвращаем пользователя в главное меню
+    main_kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Играть", callback_data="games")],
-        [InlineKeyboardButton(text="Профиль", callback_data="profile")],
+        [InlineKeyboardButton(text="Мой профиль", callback_data="profile")],
         [InlineKeyboardButton(text="Правила", callback_data="rules")],
         [InlineKeyboardButton(text="Помощь", callback_data="support")],
     ])
-    await message.answer("Спасибо! Сообщение отправлено, скоро отвечу ❤️", reply_markup=menu)
-    await state.clear()
 
+    await message.answer(
+        "Спасибо! Твоё сообщение отправлено.\n"
+        "Я скоро отвечу лично ❤️",
+        reply_markup=main_kb
+    )
+    await state.clear()  # выходим из состояния
 
-# Админ нажал Ответить
+# Админ нажал «Ответить»
 @router.callback_query(F.data.startswith("reply_"))
-async def admin_reply(callback: CallbackQuery):
+async def admin_reply(callback: types.CallbackQuery):
     if callback.from_user.id != ADMIN_ID:
-        return
-    await callback.message.answer("Пиши ответ:")
+        return await callback.answer("Ты не админ", show_alert=True)
+
+    await callback.message.answer(f"Пиши ответ пользователю {callback.data.split('_')[1]}:")
     await callback.answer()
 
-
-# Админ отправил ответ
+# Админ отправил ответ (ответил на пересланное сообщение)
 @router.message(F.reply_to_message & F.from_user.id == ADMIN_ID)
-async def send_admin_reply(message: Message):
+async def send_reply_to_user(message: types.Message):
     if not message.reply_to_message or not message.reply_to_message.forward_from:
         return
+
     user_id = message.reply_to_message.forward_from.id
-    await message.copy_to(user_id, caption=f"Ответ от организатора:\n\n{message.text or ''}")
-    await message.answer("Отправлено ✅")
+    await message.bot.send_message(user_id, f"Ответ от организатора:\n\n{message.text}")
+    await message.answer("Ответ отправлен ✅")
