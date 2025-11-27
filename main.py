@@ -3,9 +3,10 @@ import os
 from aiohttp import web
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 
-from config import bot, dp, WEBHOOK_URL
+from config import bot, dp
 from database import init_db
 
+# ← ЭТО САМОЕ ГЛАВНОЕ — ПОДКЛЮЧЕНИЕ ВСЕХ РОУТЕРОВ
 from handlers import (
     start_router, profile_router, events_router, booking_router,
     payments_router, my_bookings_router, cabinet_router,
@@ -23,29 +24,14 @@ dp.include_router(rules_router)
 dp.include_router(support_router)
 dp.include_router(admin_router)
 
-async def on_startup(_):
+async def on_startup(app):
     await init_db()
-    await bot.set_webhook(WEBHOOK_URL)
-    print(f"Webhook установлен: {WEBHOOK_URL}")
+    await bot.set_webhook(os.getenv("WEBHOOK_URL"))
+    print(f"Webhook установлен: {os.getenv('WEBHOOK_URL')}")
 
-async def on_shutdown(_):
-    await bot.delete_webhook(drop_pending_updates=True)
-    await bot.session.close()
-
-async def main():
-    app = web.Application()
-    SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path="/")
-    app.on_startup.append(on_startup)
-    app.on_shutdown.append(on_shutdown)
-
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8000)))
-    await site.start()
-
-    print("Бот запущен на Railway — живём вечно ❤️")
-    while True:
-        await asyncio.sleep(3600)
+app = web.Application()
+SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path="/")
+app.on_startup.append(on_startup)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    web.run_app(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
