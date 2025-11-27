@@ -1,63 +1,43 @@
-# database.py — только актуальная версия с events
 import aiosqlite
-import datetime
-from datetime import datetime   # ← ДОБАВЬ ЭТУ СТРОКУ!
 
 DB_NAME = "bot.db"
 
 async def init_db():
-    async with aiosqlite.connect(DB_NAME) as conn:
-        await conn.executescript("""
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.executescript("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY,
                 name TEXT,
                 birthdate TEXT,
                 age INTEGER,
-                fun_fact TEXT,
-                crazy_story TEXT,
-                games_played INTEGER DEFAULT 0,
-                loyalty INTEGER DEFAULT 0,
-                created_at TEXT
+                fact TEXT,
+                story TEXT
             );
-
             CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                game_type TEXT,
-                name TEXT,
+                type TEXT,
                 datetime TEXT,
-                address TEXT,
-                price INTEGER,
-                seats_total INTEGER DEFAULT 20,
-                seats_taken INTEGER DEFAULT 0
+                place TEXT,
+                price INTEGER
             );
-
-            CREATE TABLE IF NOT EXISTS payments (
+            CREATE TABLE IF NOT EXISTS bookings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER,
                 event_id INTEGER,
-                amount INTEGER,
-                status TEXT DEFAULT 'completed',
-                created_at TEXT
+                paid INTEGER DEFAULT 0
             );
         """)
-        await conn.commit()
-    print("База данных готова — с датой рождения, фактом и странной историей!")
-
-
-async def add_user(user_id: int, name: str = None, birthdate: str = None, age: int = 0,
-                  fun_fact: str = None, crazy_story: str = None):
-    async with aiosqlite.connect(DB_NAME) as conn:
-        await conn.execute("""
-            INSERT OR REPLACE INTO users 
-            (user_id, name, birthdate, age, fun_fact, crazy_story, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, name, birthdate, age, fun_fact, crazy_story, datetime.now().isoformat()))
-        await conn.commit()
+        await db.commit()
 
 async def get_user(user_id: int):
-    async with aiosqlite.connect(DB_NAME) as conn:
-        conn.row_factory = aiosqlite.Row
-        async with conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cur:
-            row = await cur.fetchone()
-            return dict(row) if row else None
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cur:
+            return await cur.fetchone()
 
+async def save_user(data: dict):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute("""
+            INSERT OR REPLACE INTO users (user_id, name, birthdate, age, fact, story)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (data['user_id'], data['name'], data['birthdate'], data['age'], data['fact'], data['story']))
+        await db.commit()
