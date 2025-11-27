@@ -45,3 +45,4 @@ async def process_payment(callback: types.CallbackQuery):
         parse_mode="Markdown"
     )
 
+__all__ = ["router"]
