@@ -63,8 +63,14 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8000)))
     await site.start()
 
-    print("Бот запущен на Railway через webhook! Живём вечно")
-    await asyncio.Event().wait()  # держим контейнер живым
+    print("Бот запущен на Railway через webhook! Живём вечно ❤️")
+
+    # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+    # ЭТА СТРОЧКА ДЕРЖИТ КОНТЕЙНЕР ЖИВЫМ НАВСЕГДА
+    # без неё Railway думает, что процесс "ничего не делает" и убивает его
+    while True:
+        await asyncio.sleep(3600)  # спим по часу — этого хватает
+    # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←← # держим контейнер живым
 
 
 if __name__ == "__main__":
