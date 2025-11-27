@@ -13,6 +13,7 @@ from handlers.games import router as games_router
 from handlers.profile import router as profile_router
 from handlers.common import router as common_router
 from handlers.admin import router as admin_router
+from handlers.payments import router as payments_router
 # если есть ещё роутеры — добавь их сюда же
 
 dp.include_router(start_router)
@@ -20,6 +21,7 @@ dp.include_router(games_router)
 dp.include_router(profile_router)
 dp.include_router(common_router)
 dp.include_router(admin_router)
+dp.include_router(payments_router)
 # и остальные
 
 async def on_startup(_):
