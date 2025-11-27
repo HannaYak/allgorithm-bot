@@ -4,11 +4,12 @@ from aiogram.enums import ParseMode
 from os import getenv
 
 TOKEN = getenv("BOT_TOKEN")
-ADMIN_ID = 5456905649  # ← ТВОЙ ID
-WEBHOOK_URL = getenv("WEBHOOK_URL")  # https://chic-wisdom-bot.up.railway.app
+if not TOKEN:
+    raise ValueError("BOT_TOKEN не найден в переменных окружения!")
 
-bot = Bot(
-    token=TOKEN,
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-)
+WEBHOOK_URL = getenv("WEBHOOK_URL")
+if not WEBHOOK_URL:
+    raise ValueError("WEBHOOK_URL не найден!")
+
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
