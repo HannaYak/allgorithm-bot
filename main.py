@@ -22,15 +22,20 @@ dp.include_router(support_router)
 dp.include_router(admin_router)
 
 async def on_startup(_):
-    # ПРИНУДИТЕЛЬНО УБИВАЕМ ВЕБХУК ПРИ КАЖДОМ СТАРТЕ
     await bot.delete_webhook(drop_pending_updates=True)
-    print("Вебхук принудительно удалён — теперь только polling!")
+    print("Вебхук УБИТ навсегда!")
 
 async def main():
     await init_db()
     await on_startup(None)
-    print("Бот запущен — отвечает мгновенно!")
-    await dp.start_polling(bot)
+    print("БОТ ЖИВЁТ! Пиши /start — я отвечу!")
+
+    # Запускаем polling и держим контейнер живым
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+
+    # Этот цикл никогда не даст Railway убить нас
+    while True:
+        await asyncio.sleep(3600)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
