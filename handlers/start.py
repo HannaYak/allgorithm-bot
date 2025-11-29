@@ -1,7 +1,7 @@
 from aiogram import Router, types
 from aiogram.filters import CommandStart
 from database import get_user
-from .common import main_menu
+from handlers.common import main_menu  # ← важно именно так
 
 router = Router()
 
@@ -9,7 +9,10 @@ router = Router()
 async def cmd_start(message: types.Message):
     user = await get_user(message.from_user.id)
     if user:
-        await message.answer(f"С возвращением, {user[1]}! ✨", reply_markup=main_menu())
+        await message.answer(
+            f"С возвращением, {user[1]}! ✨",
+            reply_markup=main_menu()   # ← вот это меню
+        )
     else:
         kb = types.InlineKeyboardMarkup(inline_keyboard=[
             [types.InlineKeyboardButton(text="Начать анкету (1 раз и навсегда)", callback_data="start_reg")]
