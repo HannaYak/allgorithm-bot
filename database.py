@@ -16,12 +16,13 @@ async def init():
             CREATE TABLE IF NOT EXISTS events (
                 id TEXT PRIMARY KEY,
                 game TEXT, datetime TEXT, kitchen TEXT, location TEXT,
-                limit INTEGER, taken INTEGER DEFAULT 0, price INTEGER
+                max_places INTEGER, taken INTEGER DEFAULT 0, price INTEGER
             )
         ''')
         await db.execute('''
             CREATE TABLE IF NOT EXISTS bookings (
-                user_id INTEGER, event_id TEXT
+                user_id INTEGER, event_id TEXT,
+                PRIMARY KEY (user_id, event_id)
             )
         ''')
         await db.commit()
