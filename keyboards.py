@@ -15,3 +15,6 @@ def games_menu():
         [KeyboardButton(text="Назад в меню")]
     ]
     return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+def back_to_menu():
+    return ReplyKeyboardMarkup([[KeyboardButton(text="Назад в меню")]], resize_keyboard=True)
