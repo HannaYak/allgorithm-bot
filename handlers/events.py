@@ -17,5 +17,5 @@ async def show_dates(message: Message):
     
     text = f"{game} — выбери дату:\n\n"
     for dt, kitchen, taken, max_places, price in rows:
-        text += f"{dt} ({kitchen})\n{taken}/{limit} мест • {price} zł\n\n"
+        text += f"{dt} ({kitchen})\n{taken}/{max_places} мест • {price} zł\n\n"
     await message.answer(text + "Напиши дату в формате ДД.ММ.ГГГГ ЧЧ:ММ")
