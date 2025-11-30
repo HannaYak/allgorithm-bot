@@ -1,17 +1,21 @@
-from aiogram import Router, types
-from .common import is_registered, main_menu
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery
+import aiosqlite
 
 router = Router()
 
-@router.callback_query(lambda c: c.data == "events")
-async def show_events(callback: types.CallbackQuery):
-    if not await is_registered(callback): return
-
-    kb = types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(text="Eat & Meet / Talk & Toast", callback_data="event_eatmeet")],
-        [types.InlineKeyboardButton(text="Аукцион странных историй", callback_data="event_auction")],
-        [types.InlineKeyboardButton(text="Stock & Know", callback_data="event_stock")],
-        [types.InlineKeyboardButton(text="Быстрые свидания", callback_data="event_speed")],
-        [types.InlineKeyboardButton(text="Назад", callback_data="back_main")]
-    ])
-    await callback.message.edit_text("Выбери мероприятие:", reply_markup=kb)
+@router.message(F.text.in_(["Talk & Toast", "Stock & Know", "Быстрые свидания"]))
+async def show_dates(message: Message):
+    game = message.text
+    async with aiosqlite.connect("bot.db") as db:
+        cursor = await db.execute("SELECT datetime, kitchen, taken, limit, price FROM events WHERE game = ? AND taken < limit", (game,))
+        rows = await cursor.fetchall()
+    
+    if not rows:
+        await message.answer("Нет доступных дат")
+        return
+    
+    text = f"{game} — выбери дату:\n\n"
+    for dt, kitchen, taken, limit, price in rows:
+        text += f"{dt} ({kitchen})\n{taken}/{limit} мест • {price} zł\n\n"
+    await message.answer(text + "Напиши дату в формате ДД.ММ.ГГГГ ЧЧ:ММ")
