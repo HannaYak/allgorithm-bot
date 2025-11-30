@@ -8,7 +8,7 @@ router = Router()
 async def show_dates(message: Message):
     game = message.text
     async with aiosqlite.connect("bot.db") as db:
-        cursor = await db.execute("SELECT datetime, kitchen, taken, limit, price FROM events WHERE game = ? AND taken < limit", (game,))
+        cursor = await db.execute("SELECT datetime, kitchen, taken, max_places, price FROM events WHERE game = ? AND taken < max_places", (game,))
         rows = await cursor.fetchall()
     
     if not rows:
