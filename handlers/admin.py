@@ -1,4 +1,5 @@
 from aiogram import Router, F
+from aiogram.types import Message
 from config import ADMIN_ID
 import aiosqlite
 import uuid
@@ -17,5 +18,5 @@ async def admin_add_event(message: Message):
             )
             await db.commit()
         await message.answer("Событие добавлено!")
-    except:
-        await message.answer("Формат: Игра | ДД.ММ.ГГГГ ЧЧ:ММ | Кухня | Адрес | Лимит | Цена")
+    except Exception as e:
+        await message.answer(f"Ошибка: {e}\nФормат: Игра | ДД.ММ.ГГГГ ЧЧ:ММ | Кухня | Адрес | Лимит | Цена")
