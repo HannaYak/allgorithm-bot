@@ -1,14 +1,8 @@
-from aiogram import Bot, Dispatcher
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from os import getenv
+from dotenv import load_dotenv
+import os
 
-TOKEN = getenv("BOT_TOKEN")
-if not TOKEN:
-    raise ValueError("BOT_TOKEN не найден! Добавь в Railway Variables")
+load_dotenv()
 
-# ADMIN_ID нужен для админки и поддержки
-ADMIN_ID = 5670565513  # ← твой настоящий ID
-
-bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-dp = Dispatcher()
+BOT_TOKEN = "8015640378:AAHohpW7xQjLzKftJcEDamwMujRvGIRRIQ"
+ADMIN_ID = 5456905649  # ← замени на свой ID (узнай у @userinfobot)
+STRIPE_KEY = "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"  # ← потом заменишь на свой
